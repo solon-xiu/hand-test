@@ -1,0 +1,81 @@
+kind: pipeline
+name: developci
+
+stages:
+- name: clone
+  working_dir: /work
+  steps:
+  - step:
+    name: clone-001
+    image: alpine/git
+    working_dir: /work
+    description: "check code"
+    commands:
+    - echo "========211clone-first, print REMOTE_URL========="
+    - echo $REMOTE_URL
+    - sleep 20
+    volumeMounts:
+    - name: work
+      path: /work
+- name: build-002
+  parallel: true
+  privileged: true
+  steps:
+  - name: test-first
+    image: docker.easyops.local/ci/golang-build:0.6
+    working_dir: /work
+    description: "test code"
+    commands:
+    - echo "=======parallel-001-test,print WORKSPACE========"
+    - echo $WORKSPACE
+    - sleep 20
+    env:
+      - name: https_proxy
+        value: http://192.168.110.32:6152
+    volumeMounts:
+    - name: work
+      path: /work
+    - name: go-cache
+      path: /go
+  - name: build-second
+    image: docker.easyops.local/ci/golang-build:0.6
+    working_dir: /work
+    description: "build code"
+    commands:
+    - echo "=======parallel-002-build,print BUILD_EVENT========"
+    - echo $BUILD_EVENT
+    - sleep 10
+    env:
+      - name: https_proxy
+        value: http://192.168.110.32:6152
+    volumeMounts:
+    - name: work
+      path: /work
+    - name: go-cache
+      path: /go
+- name: push-003
+  steps:
+  - step:
+    name: push
+    image: docker
+    working_dir: /work
+    description: "push image"
+    commands:
+    - echo "=========push-third,print COMMIT_SHA========"
+    - echo $COMMIT_SHA
+    - sleep 22
+    volumeMounts:
+    - name: work
+      path: /work
+    - name: docker
+      path: /var/run/docker.sock
+volumes:
+- name: work
+  emptyDir: {}
+- name: docker
+  hostPath:
+    path: /var/run/docker.sock
+- name: go-cache
+  hostPath:
+    path: /go-cache
+
