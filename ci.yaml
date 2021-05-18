@@ -11,7 +11,7 @@ stages:
     working_dir: /work
     description: "check code"
     commands:
-    - echo "========1clone-first, print REMOTE_URL========="
+    - echo "========1clone-first, print REMOTE_URL====11====="
     - echo $REMOTE_URL
     - sleep 20
     volumeMounts:
